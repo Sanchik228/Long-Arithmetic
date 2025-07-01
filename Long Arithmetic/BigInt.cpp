@@ -76,9 +76,120 @@ BigInt BigInt::add_abs(const BigInt& other) const {
 	return result;
 }
 
+int BigInt::abs_compare(const BigInt& other) const {
+	if (digits.size() != other.digits.size())
+		return digits.size() < other.digits.size() ? -1 : 1;
+	for (int i = (int)digits.size() - 1; i >= 0; --i) {
+		if (digits[i] != other.digits[i])
+			return digits[i] < other.digits[i] ? -1 : 1;
+	}
+	return 0;
+}
+
+BigInt BigInt::sub_abs(const BigInt& other) const {
+	BigInt result;
+	result.digits.clear();
+
+	int borrow = 0;
+	for (size_t i = 0; i < digits.size(); ++i) {
+		int digit_sub = digits[i] - borrow;
+		if (i < other.digits.size()) {
+			digit_sub -= other.digits[i];
+		}
+		if (digit_sub < 0) {
+			digit_sub += 10;
+			borrow = 1;
+		}
+		else {
+			borrow = 0;
+		}
+		result.digits.push_back(digit_sub);
+	}
+	while (result.digits.size() > 1 && result.digits.back() == 0) {
+		result.digits.pop_back();
+	}
+
+	return result;
+}
+
 BigInt BigInt::operator+(const BigInt& other) const {
 	if (!is_negative && !other.is_negative) return add_abs(other);
 	throw std::runtime_error("Addition with negative numbers not implemented yet");
+}
+
+BigInt BigInt::operator-(const BigInt & other) const {
+	if (!is_negative && !other.is_negative) {
+		if (abs_compare(other) >= 0) {
+			return sub_abs(other);
+		}
+		else {
+			BigInt result = other.sub_abs(*this);
+			result.is_negative = true;
+			return result;
+		}
+	}
+	if (is_negative && other.is_negative) {
+		return other.sub_abs(*this);
+	}
+	if (is_negative && !other.is_negative) {
+		BigInt result = add_abs(other);
+		result.is_negative = true;
+		return result;
+	}
+	if (!is_negative && other.is_negative) {
+		return add_abs(other);
+	}
+	throw std::runtime_error("Unhandled case in operator-");
+}
+
+BigInt BigInt::operator*(const BigInt& other) const {
+	BigInt result;
+	result.digits.assign(digits.size() + other.digits.size(), 0);
+
+	for (size_t i = 0; i < digits.size(); ++i) {
+		int carry = 0;
+		for (size_t j = 0; j < other.digits.size() || carry != 0; ++j) {
+			int64_t cur = result.digits[i + j] +
+				digits[i] * 1LL * (j < other.digits.size() ? other.digits[j] : 0) +
+				carry;
+			result.digits[i + j] = cur % 10;
+			carry = cur / 10;
+		}
+	}
+	while (result.digits.size() > 1 && result.digits.back() == 0)
+		result.digits.pop_back();
+	result.is_negative = (is_negative != other.is_negative) 
+		&& !(result.digits.size() == 1 && result.digits[0] == 0);
+
+	return result;
+}
+
+bool BigInt::operator==(const BigInt& other) const {
+	return is_negative == other.is_negative && digits == other.digits;
+}
+
+bool BigInt::operator!=(const BigInt& other) const {
+	return !(*this == other);
+}
+
+bool BigInt::operator<(const BigInt& other) const {
+	if (is_negative != other.is_negative) return is_negative;
+
+	int cmp = abs_compare(other);
+	if (is_negative) return cmp > 0;
+	else return cmp < 0;
+}
+
+bool BigInt::operator<=(const BigInt& other) const {
+	return *this < other || *this == other;
+}
+
+bool BigInt::operator>(const BigInt& other) const {
+	return !(*this <= other);
+}
+
+bool BigInt::operator>=(const BigInt& other) const {
+	return !(*this < other);
 }
 
 std::ostream& operator<<(std::ostream& s, const BigInt& n) {
