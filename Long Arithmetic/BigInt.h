@@ -19,15 +19,24 @@ public:
 	BigInt(const std::string& s);
 
 	std::string to_string() const;
-	BigInt operator+(const BigInt& other) const;
-	BigInt operator-(const BigInt& other) const;
-	BigInt operator*(const BigInt& other) const;
 	bool operator==(const BigInt& other) const;
 	bool operator!=(const BigInt& other) const;
 	bool operator<(const BigInt& other) const;
 	bool operator<=(const BigInt& other) const;
 	bool operator>(const BigInt& other) const;
 	bool operator>=(const BigInt& other) const;
+	BigInt operator+(const BigInt& other) const;
+	BigInt operator-(const BigInt& other) const;
+	BigInt operator*(const BigInt& other) const;
+	BigInt operator/(const BigInt& other) const;
+	BigInt operator%(const BigInt& other) const;
+	BigInt operator^(const BigInt& exponent) const {
+		return pow(exponent);
+	}
+	unsigned long long to_ull() const;
+	BigInt pow(const BigInt& exponent) const;
+	int to_int() const;
+	long long to_ll() const;
 	friend std::ostream& operator<<(std::ostream& os, const BigInt& n);
 };
 
